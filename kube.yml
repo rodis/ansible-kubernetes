@@ -1,0 +1,32 @@
+- hosts: all
+  become: true
+  vars:
+    kubernetes_allow_pods_on_control_plane: true
+
+  pre_tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 #One day
+    - name: Ensure br_netfilter is enabled.
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Add the br_netfilter module to work across reboot
+      shell: |
+        echo br_netfilter > /etc/modules-load.d/br_netfilter.conf
+
+    - name: Check if IP forwarding is currently enabled
+      command: cat /proc/sys/net/ipv4/ip_forward
+      register: ip_forward
+      changed_when: no
+    
+    - name: Enable IP forwarding
+      shell: echo 1 > /proc/sys/net/ipv4/ip_forward
+      when: ip_forward.stdout != "1"
+
+  roles:
+    - geerlingguy.containerd
+    - geerlingguy.kubernetes
