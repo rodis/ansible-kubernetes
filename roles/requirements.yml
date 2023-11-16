@@ -1,3 +1,4 @@
 roles:
+  - src: freehck.disable_swap
   - src: geerlingguy.containerd
   - src: geerlingguy.kubernetes
